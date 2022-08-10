@@ -39,6 +39,7 @@ export enum ElementType {
     FooterDownloadTranscriptButton = "FooterDownloadTranscriptButton",
     FooterEmailTranscriptButton = "FooterEmailTranscriptButton",
     FooterSoundNotificationButton = "FooterSoundNotificationButton",
+    ProactiveChatPaneCloseButton = "ProactiveChatPaneCloseButton",
     ReconnectChatContinueChatButton = "ReconnectChatContinueChatButton",
     ReconnectChatStartNewChatButton = "ReconnectChatStartNewChatButton",
     ReconnectChatPane = "ReconnectChatPane",

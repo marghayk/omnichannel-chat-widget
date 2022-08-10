@@ -13,7 +13,7 @@ export const presetOneProactiveChatPaneControlProps: IProactiveChatPaneControlPr
     subtitleText: "Live chat support!",
 
     hideCloseButton: false,
-    closeButtonAriaLabel: "Close Button",
+    //closeButtonAriaLabel: "Close Button",
 
     isBodyContainerHorizantal: true,
 
