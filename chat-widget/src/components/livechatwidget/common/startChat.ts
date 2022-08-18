@@ -19,6 +19,7 @@ import { getReconnectIdForAuthenticatedChat, handleRedirectUnauthenticatedReconn
 import { setPostChatContextAndLoadSurvey } from "./setPostChatContextAndLoadSurvey";
 import { updateSessionDataForTelemetry } from "./updateSessionDataForTelemetry";
 import { BroadcastService } from "@microsoft/omnichannel-chat-components";
+import { IAuthProps } from "../interfaces/IAuthProps";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let optionalParams: any = {};
@@ -30,7 +31,7 @@ const prepareStartChat = async (props: ILiveChatWidgetProps, chatSDK: any, state
     }
     // Redirecting if unauthenticated reconnect chat expired
     if (props.reconnectChatPaneProps?.reconnectId) {
-        await handleRedirectUnauthenticatedReconnectChat(chatSDK, dispatch, setAdapter, initStartChat, props.reconnectChatPaneProps?.reconnectId, props.reconnectChatPaneProps?.redirectInSameWindow);
+        await handleRedirectUnauthenticatedReconnectChat(chatSDK, props.authProps, dispatch, setAdapter, initStartChat, props.reconnectChatPaneProps?.reconnectId, props.reconnectChatPaneProps?.redirectInSameWindow);
     } else {
         // Getting reconnectId for authenticated chat
         const reconnectId = await getReconnectIdForAuthenticatedChat(props, chatSDK);
@@ -39,12 +40,12 @@ const prepareStartChat = async (props: ILiveChatWidgetProps, chatSDK: any, state
             dispatch({ type: LiveChatWidgetActionType.SET_CONVERSATION_STATE, payload: ConversationState.ReconnectChat });
         } else {
             setCustomContextParams(props, state);
-            setupChatState(chatSDK, dispatch, setAdapter, state.appStates.conversationState === ConversationState.ProactiveChat, state.appStates.proactiveChatStates.proactiveChatEnablePrechat);
+            setupChatState(chatSDK, props.authProps, dispatch, setAdapter, state.appStates.conversationState === ConversationState.ProactiveChat, state.appStates.proactiveChatStates.proactiveChatEnablePrechat);
         }
     }
 };
 
-const setupChatState = async (chatSDK: any, dispatch: Dispatch<ILiveChatWidgetAction>, setAdapter: any, isProactiveChat?: boolean | false, proactiveChatEnablePrechatState?: boolean | false) => {
+const setupChatState = async (chatSDK: any, authProps: IAuthProps, dispatch: Dispatch<ILiveChatWidgetAction>, setAdapter: any, isProactiveChat?: boolean | false, proactiveChatEnablePrechatState?: boolean | false) => {
     // Getting PreChat Survey Context
     const parseToJson = false;
     const preChatSurveyResponse: string = await chatSDK.getPreChatSurvey(parseToJson);
@@ -54,12 +55,13 @@ const setupChatState = async (chatSDK: any, dispatch: Dispatch<ILiveChatWidgetAc
         dispatch({ type: LiveChatWidgetActionType.SET_CONVERSATION_STATE, payload: ConversationState.Prechat });
     } else {
         dispatch({ type: LiveChatWidgetActionType.SET_CONVERSATION_STATE, payload: ConversationState.Loading });
-        await initStartChat(chatSDK, dispatch, setAdapter);
+        await initStartChat(chatSDK, authProps, dispatch, setAdapter);
     }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const initStartChat = async (chatSDK: any, dispatch: Dispatch<ILiveChatWidgetAction>, setAdapter: any, params?: any, persistedState?: any) => {
+const initStartChat = async (chatSDK: any, authProps: IAuthProps, dispatch: Dispatch<ILiveChatWidgetAction>, setAdapter: any, params?: any, persistedState?: any) => {
+    console.log("test-initStartChat: ", authProps);
     try {
         let isStartChatSuccessful = false;
         if (persistedState || params?.liveChatContext) {
@@ -73,11 +75,15 @@ const initStartChat = async (chatSDK: any, dispatch: Dispatch<ILiveChatWidgetAct
             });
         }
         try {
+            console.log("test-111");
             TelemetryTimers.WidgetLoadTimer = createTimer();
             TelemetryHelper.logSDKEvent(LogLevel.INFO, {
                 Event: TelemetryEvent.StartChatSDKCall
             });
             optionalParams = Object.assign({}, params, optionalParams);
+            console.log("test-222");
+            console.log("test-calling callback function: ", authProps.authClientFunction);
+            await authProps.setAuthTokenProviderToChatSdk(chatSDK, authProps.authClientFunction);
             await chatSDK.startChat(optionalParams);
             isStartChatSuccessful = true;
         } catch (error) {
@@ -147,7 +153,7 @@ const canConnectToExistingChat = async (props: ILiveChatWidgetProps, chatSDK: an
     if (persistedState?.domainStates?.liveChatContext) {
         dispatch({ type: LiveChatWidgetActionType.SET_CONVERSATION_STATE, payload: ConversationState.Loading });
         const optionalParams = { liveChatContext: persistedState?.domainStates?.liveChatContext };
-        await initStartChat(chatSDK, dispatch, setAdapter, optionalParams, persistedState);
+        await initStartChat(chatSDK, props.authProps, dispatch, setAdapter, optionalParams, persistedState);
         return true;
     } else {
         return false;

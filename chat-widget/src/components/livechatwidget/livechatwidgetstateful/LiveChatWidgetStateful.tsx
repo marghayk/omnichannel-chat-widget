@@ -62,6 +62,7 @@ import useChatContextStore from "../../../hooks/useChatContextStore";
 import useChatSDKStore from "../../../hooks/useChatSDKStore";
 
 export const LiveChatWidgetStateful = (props: ILiveChatWidgetProps) => {
+    console.log("authProps: ", props.authProps);
     const [state, dispatch]: [ILiveChatWidgetContext, Dispatch<ILiveChatWidgetAction>] = useChatContextStore();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [adapter, setAdapter]: [any, (adapter: any) => void] = useChatAdapterStore();
@@ -118,7 +119,7 @@ export const LiveChatWidgetStateful = (props: ILiveChatWidgetProps) => {
             });
 
         if (!props.controlProps?.skipChatButtonRendering && props.reconnectChatPaneProps?.reconnectId) {
-            startUnauthenticatedReconnectChat(chatSDK, dispatch, setAdapter, props.reconnectChatPaneProps?.reconnectId, initStartChat);
+            startUnauthenticatedReconnectChat(chatSDK, props.authProps, dispatch, setAdapter, props.reconnectChatPaneProps?.reconnectId, initStartChat);
         }
 
         // Initialize global dir
@@ -127,7 +128,7 @@ export const LiveChatWidgetStateful = (props: ILiveChatWidgetProps) => {
 
         if (state.domainStates?.liveChatContext) {
             const optionalParams = { liveChatContext: state.domainStates?.liveChatContext };
-            initStartChat(chatSDK, dispatch, setAdapter, optionalParams);
+            initStartChat(chatSDK, props.authProps, dispatch, setAdapter, optionalParams);
         }
     }, []);
 
@@ -138,7 +139,7 @@ export const LiveChatWidgetStateful = (props: ILiveChatWidgetProps) => {
                 eventName: BroadcastEvent.ChatInitiated
             });
             if (props.reconnectChatPaneProps?.reconnectId && !state.appStates.reconnectId) {
-                handleUnauthenticatedReconnectChat(chatSDK, dispatch, setAdapter, props.reconnectChatPaneProps?.reconnectId, initStartChat, props.reconnectChatPaneProps?.redirectInSameWindow);
+                handleUnauthenticatedReconnectChat(chatSDK, props.authProps, dispatch, setAdapter, props.reconnectChatPaneProps?.reconnectId, initStartChat, props.reconnectChatPaneProps?.redirectInSameWindow);
             } else {
                 getReconnectIdForAuthenticatedChat(props, chatSDK).then((authReconnectId) => {
                     if (authReconnectId && !state.appStates.reconnectId) {
@@ -149,7 +150,7 @@ export const LiveChatWidgetStateful = (props: ILiveChatWidgetProps) => {
                             eventName: BroadcastEvent.StartChatSkippingChatButtonRendering,
                         };
                         BroadcastService.postMessage(chatStartedSkippingChatButtonRendering);
-                        setupChatState(chatSDK, dispatch, setAdapter);
+                        setupChatState(chatSDK, props.authProps, dispatch, setAdapter);
                     }
                 });
             }
@@ -343,7 +344,7 @@ export const LiveChatWidgetStateful = (props: ILiveChatWidgetProps) => {
     const prepareEndChatRelay = (adapter: any, state: ILiveChatWidgetContext) => prepareEndChat(props, chatSDK, setAdapter, setWebChatStyles, dispatch, adapter, state);
     const prepareStartChatRelay = () => prepareStartChat(props, chatSDK, state, dispatch, setAdapter);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const initStartChatRelay = (optionalParams?: any, persistedState?: any) => initStartChat(chatSDK, dispatch, setAdapter, optionalParams, persistedState);
+    const initStartChatRelay = (optionalParams?: any, persistedState?: any) => initStartChat(chatSDK, props.authProps, dispatch, setAdapter, optionalParams, persistedState);
     const confirmationPaneProps = initConfirmationPropsComposer(props);
 
     return (
