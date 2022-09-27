@@ -146,13 +146,12 @@ export const LiveChatWidgetStateful = (props: ILiveChatWidgetProps) => {
             return;
         }
 
-        // Check if auth settings enabled, do not connect to existing chat from cache during refresh/re-load
-        if (isAuthenticationSettingsEnabled === false) {
-            if (!isUndefinedOrEmpty(state.domainStates?.liveChatContext) && state.appStates.conversationState === ConversationState.Active) {
-                const optionalParams = { liveChatContext: state.domainStates?.liveChatContext };
-                initStartChat(chatSDK, props.chatConfig, props.getAuthToken, dispatch, setAdapter, optionalParams);
-                return;
-            }
+        if (!props.controlProps?.skipChatButtonRendering && 
+            !isUndefinedOrEmpty(state.domainStates?.liveChatContext) && 
+            state.appStates.conversationState === ConversationState.Active) {
+            const optionalParams = { liveChatContext: state.domainStates?.liveChatContext };
+            initStartChat(chatSDK, props.chatConfig, props.getAuthToken, dispatch, setAdapter, optionalParams);
+            return;
         }
 
         // All other case should show start chat button, skipChatButtonRendering will take care of it own
@@ -177,7 +176,14 @@ export const LiveChatWidgetStateful = (props: ILiveChatWidgetProps) => {
                             eventName: BroadcastEvent.StartChatSkippingChatButtonRendering,
                         };
                         BroadcastService.postMessage(chatStartedSkippingChatButtonRendering);
-                        setPreChatAndInitiateChat(chatSDK, props.chatConfig, props.getAuthToken, dispatch, setAdapter);
+                        console.log("test-111");
+                        console.log("test-liveChatContext: ", state.domainStates?.liveChatContext);
+                        console.log("test-conversationState: ", state.appStates.conversationState);
+                        const optionalParams = (!isUndefinedOrEmpty(state.domainStates?.liveChatContext) && state.appStates.conversationState === ConversationState.Active) ? 
+                            { liveChatContext: state.domainStates?.liveChatContext } : 
+                            undefined;
+                        console.log("test-optionalParams: ", optionalParams);
+                        setPreChatAndInitiateChat(chatSDK, props.chatConfig, props.getAuthToken, dispatch, setAdapter, undefined, undefined, optionalParams);
                     }
                 });
             }
